@@ -18,8 +18,8 @@ from selenium.common.exceptions import TimeoutException
 #User input 
 #Fill in this 
 #User info
-USERNAME = 'rathernotsay'
-PASSWORD = 'iamrah01'
+USERNAME = ''
+PASSWORD = ''
 # communities to scrape
 coms = ["http://lastvoyageslogs.dreamwidth.org/", "http://lastvoyages.dreamwidth.org/","http://tlvgreatesthitsdw.dreamwidth.org/"]
 comsTitle = ["Logs", "Network", "Greatest Hits"]

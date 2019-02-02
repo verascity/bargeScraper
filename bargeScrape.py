@@ -18,8 +18,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 #User input 
 #Fill in this 
 #User info
-USERNAME = 'rathernotsay'
-PASSWORD = 'iamrah01'
+USERNAME = ''
+PASSWORD = ''
 # communities to scrape
 coms = ["http://lastvoyageslogs.dreamwidth.org/", "http://lastvoyages.dreamwidth.org/","http://tlvgreatesthitsdw.dreamwidth.org/"]
 comsTitle = ["Logs", "Network", "Greatest Hits"]
@@ -78,11 +78,11 @@ def findThreadjack(url, title, tags):
 				checkForTags(tags, commentUrl, title)
 				break
 	return
-def processOneComm(url):
-	resetLists();
+def processOneComm(title, month):
+	resetLists()
 	#Get posts in a month 
-	monthRaw = c.get(url)
-	monthSoup = BeautifulSoup(monthRaw.content, "html.parser")
+	monthRaw = comsHTML[title][month]
+	monthSoup = BeautifulSoup(monthRaw, "html.parser")
 	posts = monthSoup.find_all(class_="entry-title")
 	postsNum = len(posts)
 	print("Checking " +str(postsNum)+ " posts and their comments.")
@@ -134,6 +134,7 @@ def checkForTags(tags, url, title):
 			needToAddTags.append(entry)
 	return
 def login():
+	"""Deprecated after newLogin() function added. Staying for reference (for now)."""
 	page = c.get(loginurl)
 	soup = BeautifulSoup(page.content, "html.parser")
 	chal = soup.find(class_="lj_login_chal")['value']
@@ -152,7 +153,7 @@ def login():
 	else:
 		return True
 
-def newLogin():
+def newLoginAndGetPages():
 	driver = webdriver.Chrome()
 	driver.get(loginurl)
 	assert 'Log in' in driver.title
@@ -164,18 +165,18 @@ def newLogin():
 	pwd.send_keys(PASSWORD)
 	submit.click()
 
-	comsHTML = getPages()
-  
+	comsHTML = getPages(driver)
+
 	driver.close()
-	
+
 	return comsHTML
 
 
-def getPages():
+def getPages(driver):
 
 	monthsToScrape = makeMonthArray(startMonth, endMonth, months)
 	
-	comsHTML = []
+	comsHTML = {}
 
 	for month in monthsToScrape:
 		for index in range(len(coms)):
@@ -183,11 +184,10 @@ def getPages():
 			url = coms[index]+month+style
 			driver.get(url)
 			WebDriverWait(driver, 5)
-			comsHTML.append(driver.page_source)
+			comsHTML[comsTitle[index]] = {}
+			comsHTML[comsTitle[index]][month] = driver.page_source
 
 	return comsHTML
-
-
 
 
 def makeMonthArray( startMonth, endMonth, months):
@@ -229,9 +229,9 @@ def makeMonthArray( startMonth, endMonth, months):
 with requests.Session() as c:
 	monthsToScrape = makeMonthArray(startMonth, endMonth, months)
 	print("Logging in")
-	newLogin()
+	comsHTML = newLoginAndGetPages()
 	print("Login complete. Begin Scraping")
-	if displayName != "":
+ 	if displayName != "":
 		USERNAME = displayName
 	f = open(filename, 'w')
 	for month in monthsToScrape:
@@ -242,10 +242,7 @@ with requests.Session() as c:
 		for index in range(len(coms)):
 			print("Scraping "+ comsTitle[index])
 			f.write("<span style=\"font-size:large;\"><b>"+comsTitle[index]+"</b></span></br>\n")
-			style = "/?style=light"
-			url = coms[index]+month+style
-			print(url)
-			processOneComm(url)
+			processOneComm(comsTitle[index], month)
 			f.write("<b> Post by <user name="+USERNAME.lower()+"></b></br>\n")
 			for log in logs:
 				f.write("<a href=\""+log["address"]+"\">"+log["title"]+"</a></br>\n")

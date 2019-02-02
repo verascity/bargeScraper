@@ -5,24 +5,28 @@ import sys
 import re
 from datetime import date
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import TimeoutException
 
 # bargeScrape.py
-# Craftyviking 
+# Craftyviking
 # March 1st 2016 
+# Updated 2/2/2019 by verascity
 # - A small script to generate DW friendly html for tread tracking. 
 
 #User input 
 #Fill in this 
 #User info
-USERNAME = 'yourusernamehere'
-PASSWORD = 'yourpasspwhere'
+USERNAME = 'rathernotsay'
+PASSWORD = 'iamrah01'
 # communities to scrape
 coms = ["http://lastvoyageslogs.dreamwidth.org/", "http://lastvoyages.dreamwidth.org/","http://tlvgreatesthitsdw.dreamwidth.org/"]
 comsTitle = ["Logs", "Network", "Greatest Hits"]
 #Months to scrape for. If all are left blank the scraper will scrape only the current month.
 startMonth = "" #The first month you want to scrape for, leave this blank if you want to set idividual months
 endMonth = ""  #The last month you want to scrape for, leave this blank to end with current month
-months = [""] #Individual months you want the scraper to scrape. Write as "2016/02" and seperate each by a comma ,
+months = ["2018/12"] #Individual months you want the scraper to scrape. Write as "2016/02" and seperate each by a comma ,
 #Options
 filename = "scrapeOutput.html" #Output file name
 condensed = False #If you want the links to be hidden behind a cut for each month set this to True
@@ -147,6 +151,22 @@ def login():
 		return False
 	else:
 		return True
+
+def newlogin():
+	driver = webdriver.Chrome()
+	driver.get(loginurl)
+	assert 'Log in' in driver.title
+	user = driver.find_element_by_id("user")
+	pwd = driver.find_element_by_id("lj_loginwidget_password")
+	submit = driver.find_element_by_name("action:login")
+  
+	user.send_keys(USERNAME)
+	pwd.send_keys(PASSWORD)
+	submit.click()
+
+	return
+
+
 def makeMonthArray( startMonth, endMonth, months):
 	monthsToScrape = []
 	#Remove empty months from 
@@ -182,13 +202,11 @@ def makeMonthArray( startMonth, endMonth, months):
 			monthsToScrape.append(endMonth)
 	return monthsToScrape
 
-	
-
 #Main program to run
 with requests.Session() as c:
 	monthsToScrape = makeMonthArray(startMonth, endMonth, months)
 	print("Logging in")
-	login()
+	newlogin()
 	print("Login complete. Begin Scraping")
 	if displayName != "":
 		USERNAME = displayName
@@ -201,7 +219,10 @@ with requests.Session() as c:
 		for index in range(len(coms)):
 			print("Scraping "+ comsTitle[index])
 			f.write("<span style=\"font-size:large;\"><b>"+comsTitle[index]+"</b></span></br>\n")
-			processOneComm(coms[index]+month)
+			style = "/?style=mine"
+			url = coms[index]+month+style
+			print(url)
+			processOneComm(url)
 			f.write("<b> Post by <user name="+USERNAME.lower()+"></b></br>\n")
 			for log in logs:
 				f.write("<a href=\""+log["address"]+"\">"+log["title"]+"</a></br>\n")

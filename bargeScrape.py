@@ -7,7 +7,7 @@ from datetime import date
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
 
 # bargeScrape.py
 # Craftyviking
@@ -18,8 +18,8 @@ from selenium.common.exceptions import TimeoutException
 #User input 
 #Fill in this 
 #User info
-USERNAME = ''
-PASSWORD = ''
+USERNAME = 'rathernotsay'
+PASSWORD = 'iamrah01'
 # communities to scrape
 coms = ["http://lastvoyageslogs.dreamwidth.org/", "http://lastvoyages.dreamwidth.org/","http://tlvgreatesthitsdw.dreamwidth.org/"]
 comsTitle = ["Logs", "Network", "Greatest Hits"]
@@ -152,7 +152,7 @@ def login():
 	else:
 		return True
 
-def newlogin():
+def newLogin():
 	driver = webdriver.Chrome()
 	driver.get(loginurl)
 	assert 'Log in' in driver.title
@@ -164,7 +164,30 @@ def newlogin():
 	pwd.send_keys(PASSWORD)
 	submit.click()
 
-	return
+	comsHTML = getPages()
+  
+	driver.close()
+	
+	return comsHTML
+
+
+def getPages():
+
+	monthsToScrape = makeMonthArray(startMonth, endMonth, months)
+	
+	comsHTML = []
+
+	for month in monthsToScrape:
+		for index in range(len(coms)):
+			style = "/?style=light"
+			url = coms[index]+month+style
+			driver.get(url)
+			WebDriverWait(driver, 5)
+			comsHTML.append(driver.page_source)
+
+	return comsHTML
+
+
 
 
 def makeMonthArray( startMonth, endMonth, months):
@@ -206,7 +229,7 @@ def makeMonthArray( startMonth, endMonth, months):
 with requests.Session() as c:
 	monthsToScrape = makeMonthArray(startMonth, endMonth, months)
 	print("Logging in")
-	newlogin()
+	newLogin()
 	print("Login complete. Begin Scraping")
 	if displayName != "":
 		USERNAME = displayName
@@ -219,7 +242,7 @@ with requests.Session() as c:
 		for index in range(len(coms)):
 			print("Scraping "+ comsTitle[index])
 			f.write("<span style=\"font-size:large;\"><b>"+comsTitle[index]+"</b></span></br>\n")
-			style = "/?style=mine"
+			style = "/?style=light"
 			url = coms[index]+month+style
 			print(url)
 			processOneComm(url)
